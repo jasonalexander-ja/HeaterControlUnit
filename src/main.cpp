@@ -57,7 +57,7 @@ void loop()
 	}
 
 	int res = RequestHeatingHttp(preferences, cardId);
-	`
+	
 	if (res == 200) 
 	{
 		DropCard();
