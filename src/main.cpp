@@ -13,17 +13,20 @@
 
 Preferences preferences;
 
-MFRC522 rfid(5, 0);
+MFRC522 rfid(5, 4);
 
 void setup()
 {
 	Serial.begin(115200);
+	while (!Serial);
 	SPI.begin();
 	rfid.PCD_Init();
-	pinMode(9, OUTPUT);
+	pinMode(25, OUTPUT);
 	pinMode(2, OUTPUT);
 	if(!SetupWifi(preferences)) ErrorLoopBlocking(preferences);
 	if(!ClientStatus(preferences)) ErrorLoopBlocking(preferences);
+
+	digitalWrite(2, HIGH);
 }
 
 void DropCard()
@@ -41,7 +44,6 @@ void loop()
 		return;
 
 	MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-	Serial.println(rfid.PICC_GetTypeName(piccType));
 
 	if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&
 		piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
@@ -55,13 +57,14 @@ void loop()
 	}
 
 	int res = RequestHeatingHttp(preferences, cardId);
+	`
 	if (res == 200) 
 	{
 		DropCard();
 		MainHeatingLoop();
 		return;
 	}
-	else if (res = 403) 
+	else if (res == 403) 
 	{
 		DropCard();
 		DeniedLoop();

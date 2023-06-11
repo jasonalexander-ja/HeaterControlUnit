@@ -2,18 +2,20 @@
 
 void MainHeatingLoop()
 {
-    digitalWrite(2, HIGH);
-    delay(1800000);
+    digitalWrite(25, HIGH);
     digitalWrite(2, LOW);
+    delay(1800000);
+    digitalWrite(2, HIGH);
+    digitalWrite(25, LOW);
 }
 
 void DeniedLoop()
 {
-    digitalWrite(9, HIGH);
-    delay(1000);
-    digitalWrite(9, LOW);
-    delay(500);
-    digitalWrite(9, HIGH);
-    delay(1000);
-    digitalWrite(9, LOW);
+    digitalWrite(2, LOW);
+    delay(250);
+    digitalWrite(2, HIGH);
+    delay(250);
+    digitalWrite(2, LOW);
+    delay(250);
+    digitalWrite(2, HIGH);
 }
