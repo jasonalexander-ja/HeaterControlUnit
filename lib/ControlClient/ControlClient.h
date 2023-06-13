@@ -1,5 +1,5 @@
 #include <Preferences.h>
 
-bool ClientStatus(Preferences prefs);
+bool ClientStatus(Preferences *prefs);
 
-int RequestHeatingHttp(Preferences prefs, String cardId);
+int RequestHeatingHttp(Preferences *prefs, String cardId);
