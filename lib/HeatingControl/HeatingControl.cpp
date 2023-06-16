@@ -1,37 +1,46 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
+#include <LiquidCrystal_I2C.h>
+
 #include <ErrorState.h>
+#include <Utils.h>
 
-void MainHeatingLoop()
+void MainHeatingLoop(LiquidCrystal_I2C* lcd)
 {
-	digitalWrite(25, HIGH);
-	digitalWrite(2, LOW);
-	delay(1800000);
-	digitalWrite(2, HIGH);
-	digitalWrite(25, LOW);
+	ShowLcdMsg("Time left: ", "", lcd);
+	digitalWrite(RELAY_PIN, HIGH);
+	for (int count = ON_TIME_SECS; count > 0; --count)
+	{
+		String mins = String(count / 60);
+		if (mins.length() == 1) mins = "0" + mins;
+
+		String secs = String(count % 60);
+		if (secs.length() == 1) secs = "0" + secs;
+
+		String msg = mins + ":" + secs;
+		lcd->setCursor(11, 0);
+		lcd->print(msg);
+		delay(1000);
+	}
+	digitalWrite(RELAY_PIN, LOW);
 }
 
-void DeniedLoop()
+void DeniedLoop(LiquidCrystal_I2C* lcd)
 {
-	digitalWrite(2, LOW);
-	delay(250);
-	digitalWrite(2, HIGH);
-	delay(250);
-	digitalWrite(2, LOW);
-	delay(250);
-	digitalWrite(2, HIGH);
+	ShowLcdMsg("Request blocked", "Check HMS", lcd);
+	delay(MSG_DISPLAY_TIME);
 }
 
-int HandleControlServerResponse(int httpResponse)
+int HandleControlServerResponse(int httpResponse, LiquidCrystal_I2C* lcd)
 {
 	switch (httpResponse)
 	{
 	case 200:
-		MainHeatingLoop();
+		MainHeatingLoop(lcd);
 		return 0;
 	case 403:
-		DeniedLoop();
+		DeniedLoop(lcd);
 		return 0;
 	default:
 		return -1;

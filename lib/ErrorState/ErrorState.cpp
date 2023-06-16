@@ -2,40 +2,30 @@
 #include <WiFi.h>
 #include <Preferences.h>
 
+#include <LiquidCrystal_I2C.h>
+
 #include <WifiUtils.h>
 #include <ControlClient.h>
+#include <Utils.h>
 
-String ReadLineBlocking()
+String ReadLineBlocking(LiquidCrystal_I2C* lcd)
 {
-	int count = 0;
-	int state = HIGH;
-	while (Serial.available() == 0)
-	{
-		count++;
-		if (count == 100000)
-		{
-			count = 0;
-			state = !state;
-			digitalWrite(2, state);
-		}
-	}
+	ShowLcdMsg("Type HELP for a", "list of commands", lcd);
+	while (Serial.available() == 0) {}
 	return Serial.readStringUntil('\n');
 }
 
-void WaitForSerial()
+String ReadNextLineBlocking(String line, LiquidCrystal_I2C* lcd)
 {
-	int count = 0;
-	int state = HIGH;
-	while (!Serial) 
-	{
-		count++;
-		if (count == 100000)
-		{
-			count = 0;
-			state = !state;
-			digitalWrite(2, state);
-		}
-	}
+	ShowLcdMsg(line, "", lcd);
+	while (Serial.available() == 0) {}
+	return Serial.readStringUntil('\n');
+}
+
+void WaitForSerial(LiquidCrystal_I2C* lcd)
+{
+	ShowLcdMsg("Error. Connect a", "USB serial @9600", lcd);
+	while (!Serial) {}
 }
 
 void HelpMessage()
@@ -63,22 +53,22 @@ void HelpMessage()
 	Serial.println(" *All commands must be in upper case.*");
 }
 
-bool ProcessMessage(Preferences* prefs, String command)
+bool ProcessMessage(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
 {
 	String caseInsensitive = String(command);
 	caseInsensitive.toUpperCase();
-	prefs->begin("heating-control", false);
+	prefs->begin(PREFS_APP_NAME, false);
 	if (command == "STAT")
 		Serial.println("SETUP");
 
 	else if (command == "SET_SSID")
-		prefs->putString("SSID", ReadLineBlocking());
+		prefs->putString("SSID", ReadNextLineBlocking("Send SSID", lcd));
 
 	else if (command == "SET_PSWD")
-		prefs->putString("PSWD", ReadLineBlocking());
+		prefs->putString("PSWD", ReadNextLineBlocking("Send password", lcd));
 
 	else if (command == "SET_IPAD")
-		prefs->putString("IPAD", ReadLineBlocking());
+		prefs->putString("IPAD", ReadNextLineBlocking("Send server IP", lcd));
 
 	else if (command == "GET_SSID")
 		Serial.println(prefs->getString("SSID", ""));
@@ -95,31 +85,36 @@ bool ProcessMessage(Preferences* prefs, String command)
 	else if (command == "CONNECT")
 	{
 		prefs->end();
-		if (SetupWifi(prefs))
+		if (SetupWifi(prefs, lcd))
 		{
 			if (ClientStatus(prefs)) 
 			{
 				Serial.println("CONNECTED");
+				ShowLcdMsg("Connected", "", lcd);
+				delay(MSG_DISPLAY_TIME);
 				return true;
 			}
 			Serial.println("FAILED SERVER");
+				ShowLcdMsg("Failed to ping", "control server. ", lcd);
+				delay(MSG_DISPLAY_TIME);
 			return false;
 		}
 		Serial.println("FAILED CONNECT");
+		ShowLcdMsg("Couldn't connect", "to network. ", lcd);
+		delay(MSG_DISPLAY_TIME);
 		return false;
 	}
 	prefs->end();
 	return false;
 }
 
-void ErrorLoopBlocking(Preferences* prefs)
+void ErrorLoopBlocking(Preferences* prefs, LiquidCrystal_I2C* lcd)
 {
-	WaitForSerial();
+	WaitForSerial(lcd);
 	while (true)
 	{
-		String command = ReadLineBlocking();
-		if (ProcessMessage(prefs, command))
+		String command = ReadLineBlocking(lcd);
+		if (ProcessMessage(command, prefs, lcd))
 			break;
 	}
-	digitalWrite(2, HIGH);
 }

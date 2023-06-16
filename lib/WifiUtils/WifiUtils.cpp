@@ -2,7 +2,10 @@
 #include <WiFi.h>
 #include <Preferences.h>
 
+#include <LiquidCrystal_I2C.h>
+
 #include <ControlClient.h>
+#include <Utils.h>
 
 bool WifiStatusOk()
 {
@@ -21,9 +24,9 @@ bool WifiStatusOk()
 	}
 }
 
-bool SetupWifi(Preferences* prefs)
+bool SetupWifi(Preferences* prefs, LiquidCrystal_I2C* lcd)
 {
-	prefs->begin("heating-control", false);
+	prefs->begin(PREFS_APP_NAME, false);
 	String ssidStr = prefs->getString("SSID", "");
 	String pswdStr = prefs->getString("PSWD", "");
 	if (ssidStr == "") prefs->putString("SSID", " ");
@@ -34,17 +37,19 @@ bool SetupWifi(Preferences* prefs)
 
 	prefs->getString("SSID", "").toCharArray(ssid, 50);
 	prefs->getString("PSWD", "").toCharArray(pswd, 50);
+	prefs->end();
 
+	ShowLcdMsg("Connecting to", ssid, lcd);
 	WiFi.begin(ssid, pswd);
 
 	while (WiFi.status() != WL_CONNECTED)
 	{
-		if (!WifiStatusOk())
+		if (!WifiStatusOk()) 
 		{
-			prefs->end();
+			ShowLcdMsg("Error connecting", "to WiFi network.", lcd);
+			delay(MSG_DISPLAY_TIME);
 			return false;
 		}
 	}
-	prefs->end();
 	return true;
 }

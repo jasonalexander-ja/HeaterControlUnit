@@ -2,4 +2,4 @@
 
 bool ClientStatus(Preferences *prefs);
 
-int RequestHeatingHttp(Preferences *prefs, String cardId);
+int RequestHeatingHttp(String cardId, Preferences *prefs);

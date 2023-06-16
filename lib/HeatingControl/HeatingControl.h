@@ -1,6 +1,3 @@
+#include <LiquidCrystal_I2C.h>
 
-void MainHeatingLoop();
-
-void DeniedLoop();
-
-int HandleControlServerResponse(int httpResponse);
+int HandleControlServerResponse(int httpResponse, LiquidCrystal_I2C* lcd);

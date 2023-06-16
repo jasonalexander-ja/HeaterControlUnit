@@ -5,6 +5,7 @@
 #include <HTTPClient.h>
 
 #include <MFRC522.h>
+#include <LiquidCrystal_I2C.h>
 
 #include <WifiUtils.h>
 #include <ErrorState.h>
@@ -16,32 +17,41 @@ Preferences preferences;
 
 MFRC522 rfid(5, 4);
 
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
 void setup()
 {
-	Serial.begin(115200);
+	Serial.begin(9600);
 	
 	SPI.begin();
 	rfid.PCD_Init();
+	lcd.init();
 
 	pinMode(RELAY_PIN, OUTPUT);
-	pinMode(LED_PIN, OUTPUT);
+	
+	lcd.clear();
+	lcd.backlight();
 
-	if (!SetupWifi(&preferences)) 
-		ErrorLoopBlocking(&preferences);
+	if (!SetupWifi(&preferences, &lcd)) 
+		ErrorLoopBlocking(&preferences, &lcd);
 	
 	if (!ClientStatus(&preferences)) 
-		ErrorLoopBlocking(&preferences);
+	{
+		ShowLcdMsg("Error pinging", "server. ", &lcd);
+		ErrorLoopBlocking(&preferences, &lcd);
+	}
 }
 
 void loop()
 {
-	// When ready to accept a card, show the LED 
-	digitalWrite(LED_PIN, HIGH);
-
+	ShowLcdMsg("Ready for card", "", &lcd);
 	String cardId = GetCardUidBlocking(&rfid);
 
-	int res = RequestHeatingHttp(&preferences, cardId);
+	ShowLcdMsg("Request sent...", "", &lcd);
+	int res = RequestHeatingHttp(cardId, &preferences);
 	
-	if (HandleControlServerResponse(res) == -1)
-		ErrorLoopBlocking(&preferences);
+	if (HandleControlServerResponse(res, &lcd) == -1)
+	{
+		ErrorLoopBlocking(&preferences, &lcd);
+	}
 }

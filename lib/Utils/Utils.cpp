@@ -1,4 +1,5 @@
 #include <MFRC522.h>
+#include <LiquidCrystal_I2C.h>
 
 void DropCard(MFRC522* rfid)
 {
@@ -27,6 +28,7 @@ bool GetCardUid(MFRC522* rfid, String* uid)
 	DropCard(rfid);
 
 	*uid = cardId;
+	return true;
 }
 
 String GetCardUidBlocking(MFRC522* rfid)
@@ -34,4 +36,13 @@ String GetCardUidBlocking(MFRC522* rfid)
 	String cardId = "";
 	while (!GetCardUid(rfid, &cardId)) {}
 	return cardId;
+}
+
+void ShowLcdMsg(String line1, String line2, LiquidCrystal_I2C* lcd)
+{
+	lcd->clear();
+	lcd->setCursor(0, 0);
+	lcd->print(line1);
+	lcd->setCursor(0, 1);
+	lcd->print(line2);
 }
