@@ -40,6 +40,8 @@ void setup()
 		ShowLcdMsg("Error pinging", "server. ", &lcd);
 		ErrorLoopBlocking(&preferences, &lcd);
 	}
+
+	CheckRemainingTime(&lcd, &preferences);
 }
 
 void loop()
@@ -50,7 +52,7 @@ void loop()
 	ShowLcdMsg("Request sent...", "", &lcd);
 	int res = RequestHeatingHttp(cardId, &preferences);
 	
-	if (HandleControlServerResponse(res, &lcd) == -1)
+	if (HandleControlServerResponse(res, &lcd, &preferences) == -1)
 	{
 		ErrorLoopBlocking(&preferences, &lcd);
 	}

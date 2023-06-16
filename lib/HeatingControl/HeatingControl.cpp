@@ -6,12 +6,20 @@
 #include <ErrorState.h>
 #include <Utils.h>
 
-void MainHeatingLoop(LiquidCrystal_I2C* lcd)
+void UpdatePrefsTime(int timeRemaining, Preferences* prefs)
+{
+	prefs->begin(PREFS_APP_NAME, false);
+	prefs->putInt("TIME", timeRemaining);
+	prefs->end();
+}
+
+void MainHeatingLoop(int time, LiquidCrystal_I2C* lcd, Preferences* prefs)
 {
 	ShowLcdMsg("Time left: ", "", lcd);
 	digitalWrite(RELAY_PIN, HIGH);
-	for (int count = ON_TIME_SECS; count > 0; --count)
+	for (int count = time; count > 0; --count)
 	{
+		UpdatePrefsTime(count, prefs);
 		String mins = String(count / 60);
 		if (mins.length() == 1) mins = "0" + mins;
 
@@ -23,6 +31,7 @@ void MainHeatingLoop(LiquidCrystal_I2C* lcd)
 		lcd->print(msg);
 		delay(1000);
 	}
+	UpdatePrefsTime(0, prefs);
 	digitalWrite(RELAY_PIN, LOW);
 }
 
@@ -32,12 +41,12 @@ void DeniedLoop(LiquidCrystal_I2C* lcd)
 	delay(MSG_DISPLAY_TIME);
 }
 
-int HandleControlServerResponse(int httpResponse, LiquidCrystal_I2C* lcd)
+int HandleControlServerResponse(int httpResponse, LiquidCrystal_I2C* lcd, Preferences* prefs)
 {
 	switch (httpResponse)
 	{
 	case 200:
-		MainHeatingLoop(lcd);
+		MainHeatingLoop(ON_TIME_SECS, lcd, prefs);
 		return 0;
 	case 403:
 		DeniedLoop(lcd);
@@ -45,4 +54,12 @@ int HandleControlServerResponse(int httpResponse, LiquidCrystal_I2C* lcd)
 	default:
 		return -1;
 	}
+}
+
+void CheckRemainingTime(LiquidCrystal_I2C* lcd, Preferences* prefs)
+{
+	prefs->begin(PREFS_APP_NAME, false);
+	int timeRemaining = prefs->getInt("TIME", 0);
+	prefs->end();
+	if (timeRemaining > 0) MainHeatingLoop(timeRemaining, lcd, prefs);
 }
