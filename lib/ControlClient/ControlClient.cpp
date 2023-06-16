@@ -3,24 +3,23 @@
 #include <LiquidCrystal_I2C.h>
 #include <Utils.h>
 
-bool ClientStatus(Preferences *prefs)
+int HttpReq(String uri, Preferences *prefs)
 {
 	prefs->begin(PREFS_APP_NAME, false);
-	HTTPClient http;
-	String address = "http://" + prefs->getString("IPAD", "") + "/Heater/Ping";
-	http.begin(address.c_str());
-	int responseCode = http.GET();
-	prefs->end();
-	return responseCode == 200;
-}
-
-int RequestHeatingHttp(String cardId, Preferences *prefs)
-{
-	prefs->begin(PREFS_APP_NAME, false);
-	String address = "http://" + prefs->getString("IPAD", "") + "/Heater/Request/" + cardId;
+	String address = "http://" + prefs->getString("IPAD", "") + uri;
 	prefs->end();
 
 	HTTPClient http;
 	http.begin(address.c_str());
 	return http.GET();
+}
+
+bool ClientStatus(Preferences *prefs)
+{
+	return HttpReq("/Heater/Ping", prefs) == 200;
+}
+
+int RequestHeatingHttp(String cardId, Preferences *prefs)
+{
+	return HttpReq("/Heater/Request/" + cardId, prefs);
 }

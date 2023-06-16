@@ -7,27 +7,35 @@ void DropCard(MFRC522* rfid)
 	rfid->PCD_StopCrypto1();
 }
 
-bool GetCardUid(MFRC522* rfid, String* uid)
+bool CheckPiccType(MFRC522* rfid)
 {
-	if (!rfid->PICC_IsNewCardPresent()) return false;
-	if (!rfid->PICC_ReadCardSerial()) return false;
-
 	MFRC522::PICC_Type piccType = rfid->PICC_GetType(rfid->uid.sak);
-
-	if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&
+	return piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&
 		piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
-		piccType != MFRC522::PICC_TYPE_MIFARE_4K
-	) return false;
+		piccType != MFRC522::PICC_TYPE_MIFARE_4K;
+}
 
+String CopyUidString(MFRC522* rfid)
+{
 	String cardId = "";
 	for (byte i = 0; i < 4; i++)
 	{
 		cardId = cardId + String(rfid->uid.uidByte[i]);
 	}
-		
-	DropCard(rfid);
+	return cardId;
+}
 
-	*uid = cardId;
+bool GetCardUid(MFRC522* rfid, String* uid)
+{
+	if (!rfid->PICC_IsNewCardPresent()) return false;
+	if (!rfid->PICC_ReadCardSerial()) return false;
+
+	if (CheckPiccType(rfid)) return false;
+
+	*uid = CopyUidString(rfid);
+	
+	DropCard(rfid);
+	
 	return true;
 }
 
@@ -42,7 +50,7 @@ void ShowLcdMsg(String line1, String line2, LiquidCrystal_I2C* lcd)
 {
 	lcd->clear();
 	lcd->setCursor(0, 0);
-	lcd->print(line1);
+	lcd->print(line1.substring(0, 16));
 	lcd->setCursor(0, 1);
-	lcd->print(line2);
+	lcd->print(line2.substring(0, 16));
 }

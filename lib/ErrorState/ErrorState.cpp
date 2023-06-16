@@ -53,15 +53,11 @@ void HelpMessage()
 	Serial.println(" *All commands must be in upper case.*");
 }
 
-bool ProcessMessage(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
+void ProcessSetters(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
 {
-	String caseInsensitive = String(command);
-	caseInsensitive.toUpperCase();
 	prefs->begin(PREFS_APP_NAME, false);
-	if (command == "STAT")
-		Serial.println("SETUP");
 
-	else if (command == "SET_SSID")
+	if (command == "SET_SSID")
 		prefs->putString("SSID", ReadNextLineBlocking("Send SSID", lcd));
 
 	else if (command == "SET_PSWD")
@@ -70,7 +66,13 @@ bool ProcessMessage(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
 	else if (command == "SET_IPAD")
 		prefs->putString("IPAD", ReadNextLineBlocking("Send server IP", lcd));
 
-	else if (command == "GET_SSID")
+	prefs->end();
+}
+
+void ProcessGetters(String command, Preferences* prefs)
+{
+	prefs->begin(PREFS_APP_NAME, false);
+	if (command == "GET_SSID")
 		Serial.println(prefs->getString("SSID", ""));
 
 	else if (command == "GET_PSWD")
@@ -78,33 +80,52 @@ bool ProcessMessage(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
 
 	else if (command == "GET_IPAD")
 		Serial.println(prefs->getString("IPAD", ""));
+	prefs->end();
+}
 
-	else if (caseInsensitive == "HELP" || caseInsensitive == "H") 
+void ProcessHelpMessage(String command)
+{
+	String caseInsensitive = String(command);
+	caseInsensitive.toUpperCase();
+	if (caseInsensitive == "HELP" || caseInsensitive == "H") 
 		HelpMessage();
+}
 
-	else if (command == "CONNECT")
+void ConnectMessage(String serialMsg, String upperLcd, String lowerLcd, LiquidCrystal_I2C* lcd)
+{
+	Serial.println(serialMsg);
+	ShowLcdMsg(upperLcd, lowerLcd, lcd);
+	delay(MSG_DISPLAY_TIME);
+}
+
+bool ConnectAndCheckNetwork(Preferences* prefs, LiquidCrystal_I2C* lcd)
+{
+	if (SetupWifi(prefs, lcd))
 	{
-		prefs->end();
-		if (SetupWifi(prefs, lcd))
+		if (ClientStatus(prefs)) 
 		{
-			if (ClientStatus(prefs)) 
-			{
-				Serial.println("CONNECTED");
-				ShowLcdMsg("Connected", "", lcd);
-				delay(MSG_DISPLAY_TIME);
-				return true;
-			}
-			Serial.println("FAILED SERVER");
-				ShowLcdMsg("Failed to ping", "control server. ", lcd);
-				delay(MSG_DISPLAY_TIME);
-			return false;
+			ConnectMessage("CONNECTED", "Connected", "", lcd);
+			return true;
 		}
-		Serial.println("FAILED CONNECT");
-		ShowLcdMsg("Couldn't connect", "to network. ", lcd);
-		delay(MSG_DISPLAY_TIME);
+		ConnectMessage("FAILED SERVER", "Failed to ping", "control server. ", lcd);
 		return false;
 	}
-	prefs->end();
+	ConnectMessage("FAILED CONNECT", "Couldn't connect", "to network. ", lcd);
+	return false;
+}
+
+bool ProcessMessage(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
+{
+	if (command == "STAT")
+		Serial.println("SETUP");
+
+	ProcessSetters(command, prefs, lcd);
+	ProcessGetters(command, prefs);
+	ProcessHelpMessage(command);
+
+	if (command == "CONNECT")
+		return ConnectAndCheckNetwork(prefs, lcd);
+
 	return false;
 }
 

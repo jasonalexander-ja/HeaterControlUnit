@@ -13,6 +13,19 @@ void UpdatePrefsTime(int timeRemaining, Preferences* prefs)
 	prefs->end();
 }
 
+void PrintTime(int timeSecs, LiquidCrystal_I2C* lcd)
+{
+	String mins = String(timeSecs / 60);
+	if (mins.length() == 1) mins = "0" + mins;
+
+	String secs = String(timeSecs % 60);
+	if (secs.length() == 1) secs = "0" + secs;
+
+	String msg = mins + ":" + secs;
+	lcd->setCursor(11, 0);
+	lcd->print(msg);
+}
+
 void MainHeatingLoop(int time, LiquidCrystal_I2C* lcd, Preferences* prefs)
 {
 	ShowLcdMsg("Time left: ", "", lcd);
@@ -20,15 +33,7 @@ void MainHeatingLoop(int time, LiquidCrystal_I2C* lcd, Preferences* prefs)
 	for (int count = time; count > 0; --count)
 	{
 		UpdatePrefsTime(count, prefs);
-		String mins = String(count / 60);
-		if (mins.length() == 1) mins = "0" + mins;
-
-		String secs = String(count % 60);
-		if (secs.length() == 1) secs = "0" + secs;
-
-		String msg = mins + ":" + secs;
-		lcd->setCursor(11, 0);
-		lcd->print(msg);
+		PrintTime(count, lcd);
 		delay(1000);
 	}
 	UpdatePrefsTime(0, prefs);

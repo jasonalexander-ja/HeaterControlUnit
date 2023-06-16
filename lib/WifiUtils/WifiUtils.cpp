@@ -24,23 +24,31 @@ bool WifiStatusOk()
 	}
 }
 
-bool SetupWifi(Preferences* prefs, LiquidCrystal_I2C* lcd)
+String GetStoredPassword(Preferences* prefs)
+{
+	prefs->begin(PREFS_APP_NAME, false);
+	String pswdStr = prefs->getString("PSWD", "");
+	if (pswdStr == "") prefs->putString("PSWD", " ");
+	prefs->end();
+	return pswdStr;
+}
+
+String GetStoredSSID(Preferences* prefs)
 {
 	prefs->begin(PREFS_APP_NAME, false);
 	String ssidStr = prefs->getString("SSID", "");
-	String pswdStr = prefs->getString("PSWD", "");
 	if (ssidStr == "") prefs->putString("SSID", " ");
-	if (pswdStr == "") prefs->putString("PSWD", " ");
-
-	char ssid[51];
-	char pswd[51];
-
-	prefs->getString("SSID", "").toCharArray(ssid, 50);
-	prefs->getString("PSWD", "").toCharArray(pswd, 50);
 	prefs->end();
+	return ssidStr;
+}
 
-	ShowLcdMsg("Connecting to", ssid, lcd);
-	WiFi.begin(ssid, pswd);
+
+bool SetupWifi(Preferences* prefs, LiquidCrystal_I2C* lcd)
+{
+	String ssid = GetStoredSSID(prefs);
+	String pswd = GetStoredPassword(prefs);
+
+	WiFi.begin(ssid.c_str(), pswd.c_str());
 
 	while (WiFi.status() != WL_CONNECTED)
 	{
