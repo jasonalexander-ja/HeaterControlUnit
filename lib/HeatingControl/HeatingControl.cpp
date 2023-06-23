@@ -6,6 +6,7 @@
 #include <ErrorState.h>
 #include <Utils.h>
 
+
 void UpdatePrefsTime(int timeRemaining, Preferences* prefs)
 {
 	prefs->begin(PREFS_APP_NAME, false);

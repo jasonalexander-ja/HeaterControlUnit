@@ -7,6 +7,7 @@
 #include <ControlClient.h>
 #include <Utils.h>
 
+
 bool WifiStatusOk()
 {
 	switch (WiFi.status())

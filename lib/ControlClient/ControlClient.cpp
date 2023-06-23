@@ -1,7 +1,10 @@
 #include <Preferences.h>
 #include <HTTPClient.h>
+
 #include <LiquidCrystal_I2C.h>
+
 #include <Utils.h>
+
 
 int HttpReq(String uri, Preferences *prefs)
 {

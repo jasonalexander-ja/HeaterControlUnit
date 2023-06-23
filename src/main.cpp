@@ -1,17 +1,21 @@
+// Platform libraries
 #include <Arduino.h>
 #include <Preferences.h>
 #include <SPI.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
 
+// Imported libraries
 #include <MFRC522.h>
 #include <LiquidCrystal_I2C.h>
 
+// Local imports
 #include <WifiUtils.h>
 #include <ErrorState.h>
 #include <HeatingControl.h>
 #include <ControlClient.h>
 #include <Utils.h>
+
 
 Preferences preferences;
 
