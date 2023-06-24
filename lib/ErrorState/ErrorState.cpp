@@ -16,9 +16,9 @@ String ReadLineBlocking(LiquidCrystal_I2C* lcd)
 	return Serial.readStringUntil('\n');
 }
 
-String ReadNextLineBlocking(String line, LiquidCrystal_I2C* lcd)
+String ReadLineWithMsgBlocking(String message, LiquidCrystal_I2C* lcd)
 {
-	ShowLcdMsg(line, "", lcd);
+	ShowLcdMsg(message, "", lcd);
 	while (Serial.available() == 0) {}
 	return Serial.readStringUntil('\n');
 }
@@ -59,13 +59,13 @@ void ProcessSetters(String command, Preferences* prefs, LiquidCrystal_I2C* lcd)
 	prefs->begin(PREFS_APP_NAME, false);
 
 	if (command == "SET_SSID")
-		prefs->putString("SSID", ReadNextLineBlocking("Send SSID", lcd));
+		prefs->putString("SSID", ReadLineWithMsgBlocking("Send SSID", lcd));
 
 	else if (command == "SET_PSWD")
-		prefs->putString("PSWD", ReadNextLineBlocking("Send password", lcd));
+		prefs->putString("PSWD", ReadLineWithMsgBlocking("Send password", lcd));
 
 	else if (command == "SET_IPAD")
-		prefs->putString("IPAD", ReadNextLineBlocking("Send server IP", lcd));
+		prefs->putString("IPAD", ReadLineWithMsgBlocking("Send server IP", lcd));
 
 	prefs->end();
 }
